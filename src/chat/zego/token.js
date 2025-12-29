@@ -1,17 +1,22 @@
-export async function fetchZegoToken(userID) {
-  const endpoint = import.meta.env.VITE_ZEGO_TOKEN_ENDPOINT;
-  if (!endpoint) throw new Error("Missing VITE_ZEGO_TOKEN_ENDPOINT in frontend/.env");
+export async function fetchZegoToken({ authToken }) {
+  const envEndpoint = import.meta.env.VITE_ZEGO_TOKEN_ENDPOINT;
+  const endpoint =
+    envEndpoint && envEndpoint.trim()
+      ? envEndpoint.trim()
+      : typeof window !== "undefined"
+        ? `${window.location.origin.replace(/\/$/, "")}/api/token`
+        : "";
+  if (!endpoint) throw new Error("Missing token endpoint (set VITE_ZEGO_TOKEN_ENDPOINT).");
 
-  // ✅ HARD GUARD: userID must be string
-  if (typeof userID !== "string") {
-    throw new Error(`userID must be a string, got: ${typeof userID}`);
+  if (!authToken || typeof authToken !== "string") {
+    throw new Error("Missing Auth0 access token for Zego token exchange");
   }
 
-  const cleanUserID = userID.trim();
-  if (!cleanUserID) throw new Error("userID is empty");
+  const url = new URL(endpoint, typeof window !== "undefined" ? window.location.origin : undefined);
 
-  const url = `${endpoint}?userID=${encodeURIComponent(cleanUserID)}`;
-  const res = await fetch(url);
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
 
   if (!res.ok) {
     const text = await res.text();
@@ -22,5 +27,5 @@ export async function fetchZegoToken(userID) {
   if (!data?.token || typeof data.token !== "string") {
     throw new Error("Token API did not return a valid token string");
   }
-  return data.token;
+  return data;
 }

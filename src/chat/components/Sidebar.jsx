@@ -10,6 +10,10 @@ export default function Sidebar({
   onStartNewChat,
   isConnected,
   typingStatus,
+  onSearch,
+  searchResults,
+  searchLoading,
+  searchError,
 }) {
   const displayName =
     profile?.displayName?.trim() ||
@@ -53,8 +57,29 @@ export default function Sidebar({
         <input
           placeholder="Search chats..."
           className="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400/60"
-          onChange={() => {}}
+          onChange={(e) => onSearch?.(e.target.value)}
         />
+        <div className="mt-2 space-y-1">
+          {searchLoading && (
+            <div className="text-xs text-purple-200">Searching...</div>
+          )}
+          {searchError && (
+            <div className="text-xs text-red-200 break-words">{searchError}</div>
+          )}
+          {!searchLoading &&
+            !searchError &&
+            (searchResults || []).map((r) => (
+              <button
+                key={r.userId || r.email || r.name}
+                className="w-full text-left px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm text-white"
+                onClick={() => onStartNewChat?.(r.userId || r.email || r.name)}
+                type="button"
+              >
+                <div className="font-semibold truncate">{r.name || r.email}</div>
+                <div className="text-xs text-purple-200 truncate">{r.email}</div>
+              </button>
+            ))}
+        </div>
       </div>
 
       <div className="rounded-2xl bg-white/5 border border-white/10 p-3">

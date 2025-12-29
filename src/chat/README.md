@@ -5,14 +5,14 @@ This app uses **ZegoCloud ZIM (Instant Messaging)** for real-time chat.
 ### Required environment variables
 
 - `VITE_ZEGO_APP_ID` (number)
-- `VITE_ZEGO_TOKEN_ENDPOINT` (URL) – must return a ZIM token for a given `userID`
+- `VITE_ZEGO_TOKEN_ENDPOINT` (URL) — must return a ZIM token for a given `userID`
 - (Optional) `VITE_ZEGO_ROOM_ID` (default: `global`)
 
 Example `.env`:
 
 ```bash
 VITE_ZEGO_APP_ID=123456789
-VITE_ZEGO_TOKEN_ENDPOINT=http://localhost:3001/api/zego/token
+VITE_ZEGO_TOKEN_ENDPOINT=http://localhost:3001/api/token
 VITE_ZEGO_ROOM_ID=global
 ```
 
@@ -30,5 +30,4 @@ Expected response:
 
 Notes:
 - Do **not** generate tokens in the browser (it requires your Zego server secret).
-- Implement token generation on a backend (Node/Express, etc.) using Zego’s official token generation method.
-
+- Implement token generation on a backend (Node/Express, etc.) using Zego's official token generation method.

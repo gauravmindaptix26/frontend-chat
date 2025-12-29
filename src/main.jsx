@@ -5,17 +5,31 @@ import App from './App.jsx'
 import { BrowserRouter } from "react-router-dom";
 import Auth0ProviderWithNavigate from "./auth/Auth0ProviderWithNavigate.jsx";
 
+const domain = import.meta.env.VITE_AUTH0_DOMAIN;
+const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
+const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
+const redirectUri = import.meta.env.VITE_AUTH0_REDIRECT_URI || window.location.origin;
+
+if (!domain) {
+  throw new Error("Missing VITE_AUTH0_DOMAIN in frontend/.env");
+}
+
+if (!clientId) {
+  throw new Error("Missing VITE_AUTH0_CLIENT_ID in frontend/.env");
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <Auth0ProviderWithNavigate
-        domain="dev-337kvjgonapcykbg.us.auth0.com"
-        clientId="jIZtIdoJA8qfc1he4iDtLozRLMacE15W"
+        domain={domain}
+        clientId={clientId}
         authorizationParams={{
-          redirect_uri: window.location.origin,
+          redirect_uri: redirectUri,
           // `offline_access` enables Refresh Token Rotation for SPAs (keeps users logged in across refreshes)
           // when enabled in the Auth0 dashboard for this application.
           scope: "openid profile email offline_access",
+          ...(audience ? { audience } : {}),
         }}
         cacheLocation="localstorage"
         useRefreshTokens={true}

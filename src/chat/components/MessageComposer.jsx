@@ -10,7 +10,7 @@ export default function MessageComposer({ onSend, disabled, onTyping }) {
   }, []);
 
   const submit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
     const trimmed = text.trim();
     if (!trimmed || disabled) return;
     setText("");
@@ -64,6 +64,7 @@ export default function MessageComposer({ onSend, disabled, onTyping }) {
         </div>
         <button
           type="submit"
+          onClick={submit}
           disabled={disabled || !text.trim()}
           className="h-11 px-4 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold shadow-lg shadow-purple-900/30 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.99] transition"
         >

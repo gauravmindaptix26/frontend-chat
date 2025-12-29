@@ -51,7 +51,8 @@ const mergeUniqueMessages = (previous, incoming) => {
 };
 
 export default function ChatPage() {
-  const { user, logout, isAuthenticated, isLoading } = useAuth0();
+  const { user, logout, isAuthenticated, isLoading, getIdTokenClaims } =
+    useAuth0();
   const [status, setStatus] = useState({ phase: "idle", error: "" });
   const [conversations, setConversations] = useState([]);
   const [active, setActive] = useState(null);
@@ -62,6 +63,9 @@ export default function ChatPage() {
   const typingTimeoutRef = useRef(null);
   const [typingStatus, setTypingStatus] = useState(null);
   const [replyTo, setReplyTo] = useState(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
 
   useEffect(() => {
     activeRef.current = active;
@@ -302,6 +306,19 @@ export default function ChatPage() {
         if (!email) throw new Error("Auth0 user email missing");
         if (!userID) throw new Error("Invalid userID generated from email");
 
+        const idTokenClaims = await getIdTokenClaims();
+        const idToken = idTokenClaims?.__raw;
+        if (!idToken) throw new Error("Missing Auth0 ID token");
+
+        const { token, userId: serverUserId } = await fetchZegoToken({
+          authToken: idToken,
+        });
+
+        if (serverUserId && serverUserId !== userID) {
+          throw new Error("Auth0 identity mismatch for Zego token");
+        }
+        const loginUserId = serverUserId || userID;
+
         await createZim();
         const zim = getZim();
 
@@ -415,17 +432,20 @@ export default function ChatPage() {
 
         zim.on("tokenWillExpire", async () => {
           try {
-            const newToken = await fetchZegoToken(userID);
-            await zim.renewToken(newToken);
+            const renewedIdTokenClaims = await getIdTokenClaims();
+            const renewedIdToken = renewedIdTokenClaims?.__raw;
+            if (renewedIdToken) {
+              const { token: newToken } = await fetchZegoToken({
+                authToken: renewedIdToken,
+              });
+              await zim.renewToken(newToken);
+            }
           } catch (e) {
             console.error("ZIM token renew failed", e);
           }
         });
 
-        const token = await fetchZegoToken(userID);
-        if (cancelled) return;
-
-        await loginZim({ userID, userName, token });
+        await loginZim({ userID: loginUserId, userName, token });
         if (cancelled) return;
 
         await enterRoomZim({ roomID: appRoomID, roomName: appRoomID });
@@ -469,6 +489,7 @@ export default function ChatPage() {
   }, [
     appRoomID,
     email,
+    getIdTokenClaims,
     isAuthenticated,
     isLoading,
     logout,
@@ -653,6 +674,35 @@ export default function ChatPage() {
     await markActiveAsRead();
   };
 
+  const handleUserSearch = async (query) => {
+    setSearchError("");
+    if (!query || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      setSearchLoading(true);
+      const idToken = (await getIdTokenClaims())?.__raw;
+      if (!idToken) throw new Error("Missing Auth0 ID token for search");
+      const url = new URL("/api/users", window.location.origin);
+      url.searchParams.set("q", query);
+      const res = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Search failed (${res.status}): ${text}`);
+      }
+      const data = await res.json();
+      setSearchResults(data?.results ?? []);
+    } catch (e) {
+      setSearchError(e?.message || "Search failed");
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
   const sendTyping = async () => {
     if (!active || active.type !== ZIMConversationType.Peer) return;
     if (typingTimeoutRef.current) return;
@@ -712,6 +762,10 @@ export default function ChatPage() {
             onStartNewChat={startNewChat}
             isConnected={isConnected}
             typingStatus={typingStatus}
+            onSearch={handleUserSearch}
+            searchResults={searchResults}
+            searchLoading={searchLoading}
+            searchError={searchError}
           />
         }
         chatHeader={
@@ -737,7 +791,7 @@ export default function ChatPage() {
                 <div className="font-semibold">Chat setup error</div>
                 <div className="text-red-200 mt-2 break-words">{status.error}</div>
                 <div className="text-purple-200 mt-3 text-sm">
-                  Check `frontend/.env` and backend `/api/zego/token`.
+                  Check `frontend/.env` and backend `/api/token`.
                 </div>
               </div>
             </div>
