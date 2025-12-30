@@ -1,7 +1,12 @@
 // User search endpoint for Vercel (frontend-root deploys).
 // Verifies Auth0 bearer token and queries Auth0 Management API.
 
-const { createRemoteJWKSet, jwtVerify } = require("jose");
+let joseModule = null;
+async function getJose() {
+  if (joseModule) return joseModule;
+  joseModule = await import("jose");
+  return joseModule;
+}
 
 const sanitizeUserId = (raw) =>
   String(raw ?? "")
@@ -26,6 +31,7 @@ let jwks = null;
 let mgmtTokenCache = null;
 
 async function verifyAuth0Token(req) {
+  const { createRemoteJWKSet, jwtVerify } = await getJose();
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   if (!token) throw new Error("Missing Authorization bearer token");

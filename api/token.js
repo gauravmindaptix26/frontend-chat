@@ -3,7 +3,12 @@
 
 const crypto = require("crypto");
 
-const { createRemoteJWKSet, jwtVerify } = require("jose");
+let joseModule = null;
+async function getJose() {
+  if (joseModule) return joseModule;
+  joseModule = await import("jose");
+  return joseModule;
+}
 
 const sanitizeUserId = (raw) =>
   String(raw ?? "")
@@ -107,6 +112,7 @@ function buildZegoToken(userId) {
 let jwks = null;
 
 async function verifyAuth0Token(req) {
+  const { createRemoteJWKSet, jwtVerify } = await getJose();
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   if (!token) throw new Error("Missing Authorization bearer token");
