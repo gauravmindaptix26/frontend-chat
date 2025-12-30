@@ -14,9 +14,17 @@ export async function fetchZegoToken({ authToken }) {
 
   const url = new URL(endpoint, typeof window !== "undefined" ? window.location.origin : undefined);
 
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${authToken}` },
-  });
+  let res;
+  try {
+    res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+  } catch (err) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "server";
+    throw new Error(
+      `Token API network error from ${origin} to ${url.toString()}: ${err?.message || err}`,
+    );
+  }
 
   if (!res.ok) {
     const text = await res.text();
