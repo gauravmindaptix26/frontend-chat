@@ -70,9 +70,9 @@ export default function Sidebar({
             !searchError &&
             (searchResults || []).map((r) => (
               <button
-                key={r.userId || r.email || r.name}
+                key={r.userID || r.email || r.name}
                 className="w-full text-left px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm text-white"
-                onClick={() => onStartNewChat?.(r.userId || r.email || r.name)}
+                onClick={() => onStartNewChat?.(r.userID || r.email || r.name)}
                 type="button"
               >
                 <div className="font-semibold truncate">{r.name || r.email}</div>

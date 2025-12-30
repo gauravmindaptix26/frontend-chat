@@ -57,9 +57,9 @@ function aesEncrypt(plainText, secret, iv) {
 }
 
 // Token04 generator (per Zego docs)
-function generateToken04(appId, userId, secret, effectiveTimeInSeconds, payload = "") {
+function generateToken04(appId, userID, secret, effectiveTimeInSeconds, payload = "") {
   if (!appId || typeof appId !== "number") throw new Error("appID invalid");
-  if (!userId || typeof userId !== "string") throw new Error("userId invalid");
+  if (!userID || typeof userID !== "string") throw new Error("userID invalid");
   if (!secret || typeof secret !== "string") throw new Error("secret invalid");
   if (!effectiveTimeInSeconds || typeof effectiveTimeInSeconds !== "number")
     throw new Error("effectiveTimeInSeconds invalid");
@@ -68,7 +68,7 @@ function generateToken04(appId, userId, secret, effectiveTimeInSeconds, payload 
 
   const tokenInfo = {
     app_id: appId,
-    user_id: userId,
+    user_id: userID,
     nonce: rndNum(-2147483648, 2147483647),
     ctime: createTime,
     expire: createTime + effectiveTimeInSeconds,
@@ -98,7 +98,7 @@ function generateToken04(appId, userId, secret, effectiveTimeInSeconds, payload 
   return "04" + buf.toString("base64");
 }
 
-function buildZegoToken(userId) {
+function buildZegoToken(userID) {
   const appId = Number(process.env.ZEGO_APP_ID);
   const secret = process.env.ZEGO_SERVER_SECRET;
   const expireSeconds = Number(process.env.ZEGO_TOKEN_EXPIRE_SECONDS || 3600);
@@ -106,7 +106,7 @@ function buildZegoToken(userId) {
   if (!appId) throw new Error("ZEGO_APP_ID missing/invalid");
   if (!secret) throw new Error("ZEGO_SERVER_SECRET missing");
 
-  return generateToken04(appId, userId, secret, expireSeconds, "");
+  return generateToken04(appId, userID, secret, expireSeconds, "");
 }
 
 let jwks = null;
@@ -145,14 +145,14 @@ module.exports = async function handler(req, res) {
   try {
     const claims = await verifyAuth0Token(req);
     const rawUserId = claims.email || claims.sub;
-    const userId = sanitizeUserId(rawUserId);
+    const userID = sanitizeUserId(rawUserId);
 
-    if (!userId) {
+    if (!userID) {
       return res.status(400).json({ error: "Could not derive userID from Auth0 token" });
     }
 
-    const token = buildZegoToken(userId);
-    return res.status(200).json({ token, userId });
+    const token = buildZegoToken(userID);
+    return res.status(200).json({ token, userID });
   } catch (e) {
     const status = e.message?.includes("Missing Authorization") ? 401 : 500;
     return res.status(status).json({ error: e.message || "Token generation failed" });

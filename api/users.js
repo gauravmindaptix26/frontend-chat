@@ -136,9 +136,9 @@ module.exports = async function handler(req, res) {
     const results = (users || []).map((u) => {
       const email = u.email || "";
       const sub = u.user_id || "";
-      const userId = sanitizeUserId(email || sub);
+      const userID = sanitizeUserId(email || sub);
       return {
-        userId,
+        userID,
         name: u.name || email || sub,
         email,
         picture: u.picture || "",

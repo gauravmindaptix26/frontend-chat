@@ -310,9 +310,9 @@ export default function ChatPage() {
         const idToken = idTokenClaims?.__raw;
         if (!idToken) throw new Error("Missing Auth0 ID token");
 
-        const { token, userId: serverUserId } = await fetchZegoToken({
+        const { token, userID: serverUserId } = await fetchZegoToken({
           authToken: idToken,
-          userId: email || userID,
+          userID: email || userID,
         });
 
         if (serverUserId && serverUserId !== userID) {
@@ -438,7 +438,7 @@ export default function ChatPage() {
             if (renewedIdToken) {
               const { token: newToken } = await fetchZegoToken({
                 authToken: renewedIdToken,
-                userId: email || userID,
+                userID: email || userID,
               });
               await zim.renewToken(newToken);
             }
