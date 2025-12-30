@@ -1,4 +1,4 @@
-export async function fetchZegoToken({ authToken }) {
+export async function fetchZegoToken({ authToken, userId }) {
   const envEndpoint = import.meta.env.VITE_ZEGO_TOKEN_ENDPOINT;
   const endpoint =
     envEndpoint && envEndpoint.trim()
@@ -16,6 +16,9 @@ export async function fetchZegoToken({ authToken }) {
   }
 
   const url = new URL(endpoint, typeof window !== "undefined" ? window.location.origin : undefined);
+  if (userId) {
+    url.searchParams.set("userId", userId);
+  }
 
   let res;
   try {

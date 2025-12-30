@@ -312,6 +312,7 @@ export default function ChatPage() {
 
         const { token, userId: serverUserId } = await fetchZegoToken({
           authToken: idToken,
+          userId: email || userID,
         });
 
         if (serverUserId && serverUserId !== userID) {
@@ -437,6 +438,7 @@ export default function ChatPage() {
             if (renewedIdToken) {
               const { token: newToken } = await fetchZegoToken({
                 authToken: renewedIdToken,
+                userId: email || userID,
               });
               await zim.renewToken(newToken);
             }
