@@ -1,5 +1,6 @@
-// Vercel function wrapper (frontend root deploys) delegating to backend logic.
 module.exports = async function handler(req, res) {
-  const mod = await import("../../backend/api/health.js");
-  return mod.default(req, res);
+  return res.status(200).json({
+    status: "ok",
+    message: "Frontend API health",
+  });
 };
