@@ -1,7 +1,7 @@
 // Standalone token endpoint for Vercel (frontend-root deploys).
 // Generates a Zego token after verifying the Auth0 bearer token.
 
-const crypto = require("crypto");
+const crypto = require("node:crypto");
 
 let joseModule = null;
 async function getJose() {
