@@ -20,7 +20,7 @@ export async function fetchZegoToken({ authToken }) {
   let res;
   try {
     res = await fetch(url.toString(), {
-      method: "POST", // 🔥 REQUIRED
+      method: "GET", // 🔥 REQUIRED
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${authToken}`,
